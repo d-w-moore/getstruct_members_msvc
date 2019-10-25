@@ -8,9 +8,20 @@
 #include <cstring>
 #include <cstdlib>
 #include <string>
+#include <functional>
+#include <map>
 #include <cstring>
-#include <regex.h>
+//#include <regex.h>
 
+template<typename T, typename U=std::string>
+using map_to_handler = std::map<std::string, 
+                                std::function<U(T*)>>;
+
+#define GET_STRUCT_MEMBER(structType, memberName) \
+    {   \
+        #memberName, \
+        [](structType* p){return std::to_string(p->memberName);} \
+    }
 
 int msiget_objstat_member(
     msParam_t*      _param1,
@@ -18,21 +29,34 @@ int msiget_objstat_member(
     msParam_t*      _param3,
     ruleExecInfo_t* _rei ) {
 
-    std::string a {""};
+    std::string a {"ERROR:general_fail"};
     rodsObjStat_t* input = static_cast<rodsObjStat_t*>(_param1->inOutStruct);
-
-    if (strcmp(_param1->type, RodsObjStat_MS_T)) {
+    int result = 0;
+    if (std::strcmp(_param1->type, RodsObjStat_MS_T) != 0)
+    {
         return USER_PARAM_TYPE_ERR;
     }
     else {
-        const char *field = parseMspForStr (_param2);
-        if (field == NULL) return USER__NULL_INPUT_ERR;
+        const char *field =  parseMspForStr(_param2);
+        if (field == nullptr) return USER__NULL_INPUT_ERR;
 
-        if (!strcmp("objSize",field)) a = std::to_string( input->objSize );
-        else if (!strcmp("objType",field)) a = std::to_string( input->objType );
+        static const map_to_handler<rodsObjStat_t> m 
+        {
+            GET_STRUCT_MEMBER(rodsObjStat_t, objType),
+            GET_STRUCT_MEMBER(rodsObjStat_t, objSize),
+        };
+
+        try 
+        {
+            a = m.at(field)(input);
+        }
+        catch(std::out_of_range) 
+        {
+            result = -1;
+        }
     }
     fillStrInMsParam(_param3,a.c_str());
-    return 0;
+    return result;
 }
 
 extern "C"
