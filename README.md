@@ -1,9 +1,20 @@
-# iRODS Simple two-parameter microservice
+# iRODS - Get structure member within microservice
 
-This plugin provides a microservice consisting of a function call
-with two parameters. 
+Beginnings of a generic structure member fetch - motivated by a need of this
+facility in iRODS Native Rule Language
 
-The first parameter is an input/output object of a string type, and
-the microservice appends extra text to it.
+To compile and test-run this sample msvc:
 
-(The second parameter, though unused, must still be provided)
+```
+cd getstruct_members_msvc
+#  edit CMakeLists.txt to match current iRODS version
+mkdir build
+cd build
+cmake ..
+make
+sudo install libmsiget_objstat_member.so  /usr/lib/irods/plugins/microservices/
+cd build
+echo "abc" >/tmp/myfile.txt; iput `icd >&/dev/null; ipwd`; iput /tmp/myfile.txt
+irule -F ../src/try_getstatmemb.r '*name="/tempZone/home/rods"'
+irule -F ../src/try_getstatmemb.r '*name="/tempZone/home/rods/myfile.txt"'
+``` 

@@ -29,18 +29,21 @@ int msiget_objstat_member(
     msParam_t*      _param3,
     ruleExecInfo_t* _rei ) {
 
-    std::string a {"ERROR:general_fail"};
+    std::string a {""};
     rodsObjStat_t* input = static_cast<rodsObjStat_t*>(_param1->inOutStruct);
-    int result = 0;
+
+    int result = -1; // Unknown iRODS error.
+
     if (std::strcmp(_param1->type, RodsObjStat_MS_T) != 0)
     {
         return USER_PARAM_TYPE_ERR;
     }
     else {
-        const char *field =  parseMspForStr(_param2);
-        if (field == nullptr) return USER__NULL_INPUT_ERR;
+        const char *field;
+        if (_param2 == nullptr ||
+            (field = parseMspForStr(_param2)) == nullptr) return USER__NULL_INPUT_ERR;
 
-        static const map_to_handler<rodsObjStat_t> m 
+        static const map_to_handler<rodsObjStat_t> handlers
         {
             GET_STRUCT_MEMBER(rodsObjStat_t, objType),
             GET_STRUCT_MEMBER(rodsObjStat_t, objSize),
@@ -48,14 +51,15 @@ int msiget_objstat_member(
 
         try 
         {
-            a = m.at(field)(input);
+            a = handlers.at(field)(input);
+            result = 0;             // Success.
         }
         catch(std::out_of_range) 
         {
-            result = -1;
+            result = SYS_INVALID_INPUT_PARAM;
         }
     }
-    fillStrInMsParam(_param3,a.c_str());
+    if (result == 0) fillStrInMsParam(_param3,a.c_str());
     return result;
 }
 
