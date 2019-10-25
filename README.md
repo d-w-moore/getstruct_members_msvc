@@ -14,7 +14,7 @@ cmake ..
 make
 sudo install libmsiget_objstat_member.so  /usr/lib/irods/plugins/microservices/
 cd build
-echo "abc" >/tmp/myfile.txt; iput `icd >&/dev/null; ipwd`; iput /tmp/myfile.txt
+echo "abc" >/tmp/myfile.txt; iput /tmp/myfile.txt `icd >&/dev/null; ipwd`
 irule -F ../src/try_getstatmemb.r '*name="/tempZone/home/rods"'
 irule -F ../src/try_getstatmemb.r '*name="/tempZone/home/rods/myfile.txt"'
 ``` 
